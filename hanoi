@@ -1,8 +1,6 @@
 %include "asm_io.inc"
 
 SECTION .data
-   command db "move one disk from peg %d to peg %d", 10, 0
-
    fmtN: db "Parameter %d",10, 0
    fmtS: db "Parameter %s",10, 0
    t_range: db "Argument out of range", 0
@@ -14,14 +12,14 @@ SECTION .bss
    disk: resd 1
    space: resd 1
 
-   fromPeg: resd 1
-   toPeg: resd 1
+   frompillar: resd 1
+   topillar: resd 1
 
-   peg1: resd 9
-   peg2: resd 9
-   peg3: resd 9
+   pillar1: resd 9
+   pillar2: resd 9
+   pillar3: resd 9
 
-   pegList: resd 3
+   pillarList: resd 3
 
 SECTION .text
    global  asm_main
@@ -39,46 +37,46 @@ set_arrays:
    ; mov eax, edx
    ; call print_int
 
-   mov ebx, dword 2  ; setting peg2
+   mov ebx, dword 2  ; setting pillar2
 
-   ; set peg2     
-   mov eax, peg2
+   ; set pillar2     
+   mov eax, pillar2
    L0:
    add eax, 32
    mov [eax], dword 9
    sub eax, 4
    ; in a loop set 0 in the remaining items
-   ; eax controls the loop, we end the loop when eax=peg2
+   ; eax controls the loop, we end the loop when eax=pillar2
    L1: mov [eax], dword 0
-   ; see which peg is setting
+   ; see which pillar is setting
    cmp ebx, dword 2
-   je PEG2
-         cmp eax, peg3
+   je pillar2
+         cmp eax, pillar3
    jne NEXT
    jmp L2
-   PEG2: cmp eax, peg2
+   pillar2: cmp eax, pillar2
    je L2
    NEXT: sub eax, 4
    jmp L1
    L2:
 
    inc ebx
-   ; peg2 set, now peg3
+   ; pillar2 set, now pillar3
    cmp ebx, dword 3
-   jne PEG1
-   mov eax, peg3
+   jne pillar1
+   mov eax, pillar3
    je L0
 
-   PEG1:
-   ; set peg1
-   mov eax, peg1
+   pillar1:
+   ; set pillar1
+   mov eax, pillar1
    add eax, 32
    mov [eax], dword 9
    sub eax, 4
    ; in a loop set edx in the remaining items
-   ; eax controls the loop, we end the loop when eax=peg1
+   ; eax controls the loop, we end the loop when eax=pillar1
    L3: mov [eax], dword edx ; move edx to the memory location of current element
-   cmp eax, peg1
+   cmp eax, pillar1
    je L5
    sub eax, 4
    ; if edx > 0, decrement, otherwise keep it 0
@@ -107,12 +105,12 @@ display_array:
       mov ecx, dword 1
       mov [arr], dword 0
 
-      ; begin drawing each peg' ecx'th element
+      ; begin drawing each pillar' ecx'th element
       BEGIN:
          cmp ecx, dword 9
          ; exit if ecx > 9
          jg display_array_end
-         ; which peg to draw
+         ; which pillar to draw
          COMPARE:   
             mov edx, [arr]
             
@@ -120,7 +118,7 @@ display_array:
             jg NEXT_ELE
             imul edx, dword 4
 
-            mov ebx, dword [pegList+edx]
+            mov ebx, dword [pillarList+edx]
 
             DLOOP:
                ; element offset
@@ -213,18 +211,18 @@ moveDisk:
    imul edx, dword 4
    imul ecx, dword 4
    ; assign array adresses
-   mov eax, dword pegList
+   mov eax, dword pillarList
    mov edx, [eax+edx]
    mov ecx, [eax+ecx]
    ; save the addresses
-   mov [toPeg], edx
-   mov [fromPeg], ecx
+   mov [topillar], edx
+   mov [frompillar], ecx
 
-   ; loop through 'from' peg
+   ; loop through 'from' pillar
    mov ebx, dword 0
 
 
-   FROM_PEG:
+   FROM_pillar:
       ; eax is for printing
       ; ebx indicates which element 
       ; ecx is the address offset for that element
@@ -239,7 +237,7 @@ moveDisk:
 ;passed
 
       ; get the array address
-      mov edx, dword [fromPeg]
+      mov edx, dword [frompillar]
 
       ; get the edx'th element's address
       add edx, ecx
@@ -248,20 +246,20 @@ moveDisk:
 
       cmp eax, dword 0
       ; if it is 0, continue to next loop
-      je FROM_PEG_INC
+      je FROM_pillar_INC
       ; otherwise take it, and replace it by 0
       mov [edx], dword 0
       ; reset element counter
       mov ebx, dword 0
       ; save the disk number
       mov [disk], eax
-      jmp TO_PEG
+      jmp TO_pillar
 
-   FROM_PEG_INC:
+   FROM_pillar_INC:
       inc ebx
-      jmp FROM_PEG
+      jmp FROM_pillar
 
-   TO_PEG:
+   TO_pillar:
       ; ebx indicates which element 
       ; ecx is the address offset for that element
       ; edx is to store the element's address
@@ -269,7 +267,7 @@ moveDisk:
       mov ecx, ebx
       imul ecx, dword 4
       ; get the array address
-      mov edx, dword[toPeg]
+      mov edx, dword[topillar]
       ; get the edx'th element's address
       add edx, ecx
       ; get the edx'th element
@@ -277,18 +275,18 @@ moveDisk:
 
       cmp eax, dword 0
       ; next element if it is 0
-      je TO_PEG_INC
+      je TO_pillar_INC
       ; if it is greater than 0, use the previous element
       sub edx, dword 4
-      ; replace it by the disk number from FROM_PEG
+      ; replace it by the disk number from FROM_pillar
       mov eax, [disk]
       mov [edx], eax
       ; leave
       jmp END_MOVING
 
-   TO_PEG_INC:
+   TO_pillar_INC:
       inc ebx,
-      jmp TO_PEG
+      jmp TO_pillar
 
    END_MOVING:
       ; draw the array
@@ -301,10 +299,10 @@ asm_main:
    enter 0,0             ; setup routine
    pusha                 ; save all registers
 
-   ; put address of each peg array in pegList
-   mov [pegList], dword peg1
-   mov [pegList+4], dword peg2
-   mov [pegList+8], dword peg3
+   ; put address of each pillar array in pillarList
+   mov [pillarList], dword pillar1
+   mov [pillarList+4], dword pillar2
+   mov [pillarList+8], dword pillar3
 
    ; address of 1st argument = name of the program is at address ebp+12
    ; address of 2nd argument = address of 1st argument + 4
