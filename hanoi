@@ -1,13 +1,3 @@
-; The Towers Of Hanoi 
-; x86 Assembly 
-; Copyright (C) 2014 Alic Jiang. All Rights Reserved. 
-; 
-; Tested under nasm 0.97 
-; 
-; N, the number of disks, is passed to main as argv[1] 
-; Error checking is performed.
-; The program is distributable with text above.
-
 %include "asm_io.inc"
 
 SECTION .data
